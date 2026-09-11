@@ -1,0 +1,44 @@
+name: Certificate Expiry Check
+author: Sanctum SecOps LLC
+description: Checks X.509 certificates for imminent expiry, from files in the repository or from live TLS endpoints, and fails the job inside a configurable threshold. Reports subject, issuer, serial, validity window, signature algorithm, and key type for every certificate examined, and flags certificates signed with algorithms that a post-quantum migration will have to replace. Intended to run on a schedule so expiry is caught by CI rather than by an outage.
+branding:
+  icon: award
+  color: purple
+inputs:
+  paths:
+    description: Newline-separated certificate file paths or globs to check. Leave empty to check endpoints only.
+    required: false
+    default: ''
+  endpoints:
+    description: Newline-separated host:port TLS endpoints to check. Port defaults to 443 when omitted.
+    required: false
+    default: ''
+  warn-days:
+    description: Emit a warning when a certificate expires within this many days.
+    required: false
+    default: '30'
+  fail-days:
+    description: Fail the job when a certificate expires within this many days.
+    required: false
+    default: '7'
+  flag-pre-quantum:
+    description: Whether to flag certificates signed with pre-quantum signature algorithms as findings.
+    required: false
+    default: 'true'
+outputs:
+  expiring-count:
+    description: Number of certificates inside the warning threshold.
+    value: ${{ steps.run-action.outputs.expiring-count }}
+  soonest-expiry:
+    description: ISO 8601 date of the earliest certificate expiry observed.
+    value: ${{ steps.run-action.outputs.soonest-expiry }}
+runs:
+  using: composite
+  steps:
+  - name: Install certificate parsing dependency
+    shell: bash
+    run: python3.11 -m pip install --requirement "${{ github.action_path }}/requirements.txt"
+  - id: run-action
+    name: Certificate Expiry Check
+    shell: bash
+    run: python3.11 "${{ github.action_path }}/scripts/cert_expiry_check.py" --paths "${{ inputs.paths }}" --endpoints "${{ inputs.endpoints }}" --warn-days "${{ inputs.warn-days }}" --fail-days "${{ inputs.fail-days }}" --flag-pre-quantum "${{ inputs.flag-pre-quantum }}"
