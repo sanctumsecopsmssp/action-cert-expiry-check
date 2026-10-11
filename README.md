@@ -13,6 +13,7 @@ Checks X.509 certificates for imminent expiry, from files in the repository or f
 | warn-days | Emit a warning when a certificate expires within this many days. | No | `30` |
 | fail-days | Fail the job when a certificate expires within this many days. | No | `7` |
 | flag-pre-quantum | Whether to flag certificates signed with pre-quantum signature algorithms as findings. | No | `true` |
+| show-cta | Append a one-line Sanctum SecOps help link to the job summary. | No | `true` |
 
 ## Outputs
 
@@ -88,3 +89,11 @@ Apache-2.0. See [LICENSE](LICENSE).
 ---
 
 Sanctum SecOps LLC · [Website](https://sanctumsecops.com) · [Support](https://sanctumsecops.com/support) · [Contact](mailto:Brian@sso-labs.com)
+
+## Job summary footer
+
+By default the job summary ends with one help link to Sanctum SecOps. Set `show-cta: 'false'` to hide it. The action sends no telemetry and makes no network calls beyond what its inputs request.
+
+## Support
+
+Built and maintained by [Sanctum SecOps LLC](https://sanctumsecops.com/contact?utm_source=github&utm_medium=readme&utm_campaign=action-cert-expiry-check&utm_content=pki-certificate-lifecycle): managed cybersecurity, enterprise PKI, post-quantum migration, and CMMC readiness support for defense contractors and regulated teams. Sanctum SecOps is not a C3PAO and does not issue CMMC certifications.

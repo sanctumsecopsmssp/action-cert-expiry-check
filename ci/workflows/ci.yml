@@ -1,0 +1,44 @@
+name: CI
+on:
+  pull_request: null
+  push:
+    branches:
+    - main
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Lint action metadata
+      run: ruby -e "require 'yaml'; metadata = YAML.load_file('action.yml'); abort('missing runs metadata') unless metadata.dig('runs', 'using') == 'composite'; abort('missing composite step') if metadata.dig('runs', 'steps').to_a.empty?"
+    - name: Run fixture
+      run: |
+        python -m pip install --requirement requirements.txt
+        python3 scripts/cert_expiry_check.py --paths tests/fixtures/fixture-cert.pem --warn-days 3650 --fail-days 0 --flag-pre-quantum true
+  self-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-latest
+        - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - id: action
+      uses: ./
+      with:
+        paths: tests/fixtures/fixture-cert.pem
+        warn-days: '3650'
+        fail-days: '0'
+        flag-pre-quantum: 'true'
+    - name: Assert outputs
+      shell: bash
+      run: |
+        echo "expiring-count=${{ steps.action.outputs.expiring-count }}"
+        test -n "${{ steps.action.outputs.expiring-count }}"
